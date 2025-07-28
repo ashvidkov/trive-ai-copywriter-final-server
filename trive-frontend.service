@@ -1,0 +1,15 @@
+[Unit]
+Description=TRIVE AI Frontend
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/ai_copywright_trive/frontend
+ExecStart=/usr/bin/npm run dev
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target 

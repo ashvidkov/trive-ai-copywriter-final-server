@@ -1,0 +1,15 @@
+[Unit]
+Description=TRIVE AI Backend
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/ai_copywright_trive/backend
+ExecStart=/usr/bin/node app.js
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target 

@@ -1,0 +1,147 @@
+---
+description: Правила интеграции AI-ассистента (Colab-прототип) в проект TRIVE AI-Копирайтер
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# 🧠 Интеграция AI-ассистента (Colab-прототип) в проект TRIVE AI-Копирайтер
+
+---
+
+## Цель
+Перенести и интегрировать рабочую логику AI-ассистента из Google Colab в продакшен-проект с backend (FastAPI), frontend (React) и PostgreSQL.
+
+---
+
+## ✅ Что у нас уже есть
+- Рабочий Colab-ноутбук с логикой:
+  - Уникализация длинного текста (с чанками)
+  - SEO-микроассистенты: Title, Description, Keywords, H1
+- Backend FastAPI + PostgreSQL (таблицы `texts`, `themes`, `text_themes`)
+- Frontend на React + Tailwind (интерфейс с полями content/result/meta)
+- .env файл для ключей
+
+---
+
+## 🗂 Структура проекта
+**База данных:**
+- `texts` (id, title, h1, content, result, meta_description, keywords, status)
+- `themes`, `text_themes` (тематики и связи)
+
+**Frontend:**
+- EditorPage с полями и кнопками (Согласовать / Доработать / Удалить)
+
+**Backend:**
+- FastAPI с API-эндпоинтами на генерацию и сохранение
+
+---
+
+## ⚙️ Что нужно сделать
+
+### 1. 🔑 Подключение OpenAI API
+В `.env` файла проекта добавить:
+```env
+OPENAI_API_KEY=sk-...
+```
+
+В `settings.py` FastAPI:
+```python
+import os
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+```
+
+---
+
+### 2. 📦 Создание файла `ai_assistant.py` (или `assistant_core.py`)
+Файл содержит функции:
+
+```python
+from openai import OpenAI
+import os
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+def split_text(text, max_length=1200):
+    # логика разбивки на чанки
+
+def rewrite_chunk(chunk):
+    # системный prompt + user prompt (уникализация)
+
+def generate_title(text):
+    # микроассистент Title
+
+def generate_description(text):
+    # микроассистент Description
+
+def generate_keywords(text):
+    # микроассистент Keywords
+
+def generate_h1(text):
+    # микроассистент H1
+
+def generate_full_output(text):
+    chunks = split_text(text)
+    rewritten_chunks = [rewrite_chunk(ch) for ch in chunks]
+    final_text = "\n\n".join(rewritten_chunks)
+    return {
+        "result": final_text,
+        "title": generate_title(final_text),
+        "h1": generate_h1(final_text),
+        "meta_description": generate_description(final_text),
+        "keywords": generate_keywords(final_text)
+    }
+```
+
+---
+
+### 3. 🔌 Добавить эндпоинт в FastAPI
+В `routes/ai.py`:
+```python
+from fastapi import APIRouter
+from pydantic import BaseModel
+from .ai_assistant import generate_full_output
+
+router = APIRouter()
+
+class TextIn(BaseModel):
+    raw_text: str
+
+@router.post("/generate/")
+def generate_article(data: TextIn):
+    return generate_full_output(data.raw_text)
+```
+
+---
+
+### 4. 🖥️ Настроить Frontend (React)
+- Добавить кнопку «Уникализировать текст»
+- Отправлять `raw_text` на `/generate/`
+- По ответу:
+  - поле `result` → в текст результата
+  - `title`, `h1`, `meta_description`, `keywords` → в SEO-блок
+
+---
+
+### 5. 🧪 Протестировать
+- Отправить тестовую статью
+- Проверить, что все поля заполняются корректно
+- Сравнить результат с Colab (должны быть идентичны)
+
+---
+
+## 📌 Замечания
+- Модель: `gpt-4o`, `temperature` варьируется по роли
+- Логика SEO-ассистентов должна быть точно перенесена из Colab
+- Возможна оптимизация с async / потоками
+
+---
+
+## 🏁 Финал
+После интеграции AI будет доступен прямо в интерфейсе TRIVE: уникализирует статьи, заполняет SEO и сохраняет в базу.
+
+> Подробности Colab-версии см. в файле: `trive_ai_seo_microassistants.ipynb`
+description:
+globs:
+alwaysApply: false
+---
