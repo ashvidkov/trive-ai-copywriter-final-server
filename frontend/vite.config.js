@@ -7,9 +7,18 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
+    allowedHosts: ['tkmetizi.ru', 'www.tkmetizi.ru', 'localhost'],
     proxy: {
-      '/api': 'http://109.94.211.36:4000',
-      '/ai': 'http://109.94.211.36:8001'
+      '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+        secure: false
+      },
+      '/ai': {
+        target: 'http://localhost:8001',
+        changeOrigin: true,
+        secure: false
+      }
     }
   }
 })
