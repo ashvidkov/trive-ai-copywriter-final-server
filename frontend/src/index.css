@@ -54,3 +54,36 @@ html, body {
   border-radius: 4px;
   background: #e5e7eb;
 }
+
+/* Стили для правильного переноса длинных строк */
+.break-all {
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+.break-words {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Стили для URL и длинных строк без пробелов */
+.url-text {
+  word-break: break-all;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Стили для карточек с контентом */
+.content-card {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Стили для предотвращения выхода текста за границы */
+.text-container {
+  max-width: 100%;
+  overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}

@@ -7,7 +7,7 @@ import Header from "../components/Header";
 
 const Toast = ({ message, type = "success", onClose }) => (
   <div className={`fixed bottom-8 right-8 z-50 px-8 py-5 rounded-2xl shadow-2xl text-lg font-bold transition-all duration-300
-    ${type === "save" ? "bg-yellow-400 text-white" : type === "approve" ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}
+    ${type === "save" ? "bg-yellow-400 text-white" : type === "approve" || type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}
     style={{ minWidth: 220 }}
   >
     {message}
@@ -91,21 +91,20 @@ const CreatePage = () => {
   };
 
   const handleUnique = async () => {
-    if (!generatedText?.trim()) {
+    if (!originalText?.trim()) {
       setToast({ message: 'Нет текста для уникализации', type: 'error' });
       return;
     }
 
     setUniqueLoading(true);
     try {
-      const response = await fetch('https://tkmetizi.ru/ai-api/rewrite/unique', {
+      const response = await fetch('https://tkmetizi.ru/ai/generate/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text: generatedText,
-          tone: 'professional'
+          raw_text: originalText
         }),
       });
 
@@ -114,7 +113,14 @@ const CreatePage = () => {
       }
 
       const data = await response.json();
-      setGeneratedText(data.unique_text);
+      setGeneratedText(data.result);
+      
+      // Заполняем SEO поля из ответа AI
+      if (data.title) setSeo(prev => ({ ...prev, title: data.title }));
+      if (data.h1) setSeo(prev => ({ ...prev, h1: data.h1 }));
+      if (data.meta_description) setSeo(prev => ({ ...prev, meta: data.meta_description }));
+      if (data.keywords) setSeo(prev => ({ ...prev, keywords: data.keywords }));
+      
       setIsDirty(true);
       setToast({ message: 'Текст успешно уникализирован!', type: 'success' });
     } catch (error) {

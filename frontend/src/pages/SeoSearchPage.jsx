@@ -1371,7 +1371,7 @@ const SeoSearchPage = () => {
               {searchResults.map((result, index) => (
                 <div
                   key={index}
-                  className={`border rounded-lg p-4 transition-all duration-200 h-[180px] cursor-pointer ${
+                  className={`border rounded-lg p-4 transition-all duration-200 h-[180px] cursor-pointer content-card ${
                     selectedResults.has(index)
                       ? "border-primary bg-blue-50 shadow-md"
                       : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
@@ -1398,7 +1398,7 @@ const SeoSearchPage = () => {
                         href={result.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary hover:underline text-xs mb-2 block truncate h-4 leading-4"
+                        className="text-primary hover:underline text-xs mb-2 block url-text h-4 leading-4 overflow-hidden"
                         onClick={(e) => e.stopPropagation()}
                         title={result.url}
                       >
@@ -1530,7 +1530,7 @@ const SeoSearchPage = () => {
                        return (
                          <div 
                            key={index} 
-                           className={`border rounded-lg p-4 transition-all duration-200 ${
+                           className={`border rounded-lg p-4 transition-all duration-200 content-card ${
                              isExcluded 
                                ? 'border-gray-300 bg-gray-100 opacity-60' 
                                : 'border-green-200 bg-green-50'
@@ -1538,12 +1538,12 @@ const SeoSearchPage = () => {
                          >
                            <div className="flex justify-between items-start mb-3">
                              <div className="flex-1">
-                               <h5 className={`font-bold mb-2 ${
+                               <h5 className={`font-bold mb-2 break-words ${
                                  isExcluded ? 'text-gray-500' : 'text-gray-800'
                                }`}>
                                  {article.title}
                                </h5>
-                               <p className={`text-sm mb-1 ${
+                               <p className={`text-sm mb-1 url-text ${
                                  isExcluded ? 'text-gray-400' : 'text-gray-600'
                                }`}>URL: {article.url}</p>
                                <p className={`text-sm ${
@@ -1578,11 +1578,11 @@ const SeoSearchPage = () => {
                              isExcluded ? 'text-gray-400' : 'text-gray-600'
                            }`}>
                              {expandedArticles.has(index) ? (
-                               <div className="whitespace-pre-wrap max-h-96 overflow-y-auto">
+                               <div className="whitespace-pre-wrap break-words max-h-96 overflow-y-auto">
                                  {article.content}
                                </div>
                              ) : (
-                               <div className="max-h-20 overflow-y-auto">
+                               <div className="max-h-20 overflow-y-auto break-words">
                                  {article.content.substring(0, 200)}...
                                </div>
                              )}
@@ -1601,11 +1601,11 @@ const SeoSearchPage = () => {
                     </h4>
                     <div className="space-y-3">
                       {parsingStats.failed_urls.map((failed, index) => (
-                        <div key={index} className="border border-red-200 bg-red-50 rounded-lg p-3">
+                        <div key={index} className="border border-red-200 bg-red-50 rounded-lg p-3 content-card">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-800 mb-1">{failed.url}</p>
-                              <p className="text-sm text-red-600">{failed.error}</p>
+                              <p className="text-sm font-medium text-gray-800 mb-1 url-text break-words">{failed.url}</p>
+                              <p className="text-sm text-red-600 break-words">{failed.error}</p>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded">
@@ -1637,7 +1637,7 @@ const SeoSearchPage = () => {
                                     [failed.url]: e.target.value
                                   }))}
                                   placeholder="Введите заголовок статьи"
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 break-words"
                                 />
                               </div>
                               <div className="mb-3">
@@ -1652,7 +1652,7 @@ const SeoSearchPage = () => {
                                   }))}
                                   placeholder="Вставьте или введите содержание статьи с этой страницы..."
                                   rows={8}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none break-words"
                                 />
                                 <div className="mt-1 text-xs text-gray-500">
                                   Слов: {(manualContent[failed.url] || '').split(/\s+/).filter(word => word.length > 0).length}
@@ -1848,11 +1848,11 @@ const SeoSearchPage = () => {
                 // Находим индекс статьи в исходном массиве parsedData
                 const originalIndex = parsedData.findIndex(a => a.url === article.url);
                 return (
-                <div key={originalIndex} className="border border-gray-200 rounded-lg p-4">
+                <div key={originalIndex} className="border border-gray-200 rounded-lg p-4 content-card">
                             <div className="flex justify-between items-start mb-3">
                               <div className="flex-1">
-                                <h5 className="font-bold text-gray-800 mb-2">{article.title}</h5>
-                                <p className="text-sm text-gray-600 mb-1">URL: {article.url}</p>
+                                <h5 className="font-bold text-gray-800 mb-2 break-words">{article.title}</h5>
+                                <p className="text-sm text-gray-600 mb-1 url-text">URL: {article.url}</p>
                                 <p className="text-sm text-gray-600">Слов: {originalContent[originalIndex] ? 
                                   originalContent[originalIndex].split(/\s+/).filter(word => word.length > 0).length : 
                                   article.word_count}</p>
@@ -1909,11 +1909,11 @@ const SeoSearchPage = () => {
                               // Обычный просмотр для автоматического режима или свернутого состояния
                               <div className="text-sm text-gray-600 bg-white p-3 rounded">
                                 {expandedArticles.has(originalIndex) ? (
-                                  <div className="whitespace-pre-wrap max-h-96 overflow-y-auto">
+                                  <div className="whitespace-pre-wrap break-words max-h-96 overflow-y-auto">
                                     {editableContent[originalIndex] || article.content}
                                   </div>
                                 ) : (
-                                  <div className="max-h-20 overflow-y-auto">
+                                  <div className="max-h-20 overflow-y-auto break-words">
                                     {(editableContent[originalIndex] || article.content).substring(0, 200)}...
                                   </div>
                                 )}
@@ -1953,10 +1953,10 @@ const SeoSearchPage = () => {
                  
             <div className="space-y-4">
               {cleanedData.filter(article => !excludedArticles.has(article.url)).map((article, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4">
+                <div key={index} className="border border-gray-200 rounded-lg p-4 content-card">
                        <div className="flex justify-between items-start mb-3">
                          <div className="flex-1">
-                  <h4 className="font-bold text-gray-800 mb-2">{article.title}</h4>
+                  <h4 className="font-bold text-gray-800 mb-2 break-words">{article.title}</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm font-medium text-gray-600">Исходный текст:</p>
@@ -1980,11 +1980,11 @@ const SeoSearchPage = () => {
                        </div>
                        <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
                          {expandedArticles.has(index) ? (
-                           <div className="whitespace-pre-wrap max-h-96 overflow-y-auto">
+                           <div className="whitespace-pre-wrap break-words max-h-96 overflow-y-auto">
                              {article.cleaned_content}
                            </div>
                          ) : (
-                           <div className="max-h-20 overflow-y-auto">
+                           <div className="max-h-20 overflow-y-auto break-words">
                     {article.cleaned_content.substring(0, 200)}...
                            </div>
                          )}
@@ -2036,7 +2036,7 @@ const SeoSearchPage = () => {
                  </div>
                  <div className="space-y-2 mb-6">
               {chunks.map((chunk, index) => (
-                     <div key={index} className={`border rounded p-3 ${isChunkExcluded(index) ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
+                     <div key={index} className={`border rounded p-3 content-card ${isChunkExcluded(index) ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
                   <div className="flex justify-between items-center mb-2">
                          <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-gray-600">Чанк {index + 1}</span>
@@ -2110,11 +2110,11 @@ const SeoSearchPage = () => {
                        </div>
                        <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
                          {expandedArticles.has(index) ? (
-                           <div className="whitespace-pre-wrap">
+                           <div className="whitespace-pre-wrap break-words">
                              {chunk.text}
                            </div>
                          ) : (
-                           <div className="max-h-16 overflow-hidden">
+                           <div className="max-h-16 overflow-hidden break-words">
                     {chunk.text.substring(0, 150)}...
                            </div>
                          )}
