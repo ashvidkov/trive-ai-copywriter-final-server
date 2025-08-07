@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import logo from "../assets/logo250x.png";
 
 const LoginPage = () => {
   const [login, setLogin] = useState("");
@@ -37,8 +38,12 @@ const LoginPage = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
       {/* Логотип и подпись */}
       <div className="flex flex-col items-center mb-8 select-none">
-        <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white font-bold text-3xl shadow-lg mb-3">Т</div>
-        <span className="text-2xl font-extrabold tracking-tight text-primary mb-1">ТРАЙВ</span>
+        <img 
+          src={logo} 
+          alt="TRIVE AI" 
+          className="h-16 w-auto object-contain mb-3"
+          style={{ maxWidth: '240px' }}
+        />
         <span className="text-base text-gray-500 font-semibold">AI SEO копирайтер</span>
       </div>
       <form

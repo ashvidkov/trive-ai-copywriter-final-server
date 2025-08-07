@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const themesStub = [
   { id: 1, name: "Роботы и робототехника", count: 6 },
@@ -143,7 +143,12 @@ const HomePage = () => {
           {role !== "viewer" && role !== "reader" && (
             <div className="flex gap-4 mb-8">
               <button className="px-6 py-3 rounded-xl bg-primary text-white font-bold text-base hover:bg-primary/90 transition-all duration-200 shadow-lg" onClick={handleCreateClick}>SEO-рерайтер</button>
-              <button className="px-6 py-3 rounded-xl bg-gray-200 text-primary font-bold text-base hover:bg-gray-300 transition-all duration-200 shadow-lg">SEO-копирайтер с поиском</button>
+              <Link 
+                to="/seo-copywriter"
+                className="px-6 py-3 rounded-xl bg-green-600 text-white font-bold text-base hover:bg-green-700 transition-all duration-200 shadow-lg"
+              >
+                🤖 SEO-копирайтер с AI генерацией
+              </Link>
             </div>
           )}
           {/* Заголовок */}

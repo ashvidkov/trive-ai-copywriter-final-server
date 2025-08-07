@@ -74,45 +74,59 @@ router.get('/users', requireAdmin, async (req, res) => {
 
 // POST /api/admin/users - создать пользователя
 router.post('/users', requireAdmin, async (req, res) => {
+  console.log('🚀 Начинаем создание пользователя:', req.body);
   const { login, email, password, role } = req.body;
 
   if (!login || !email || !password || !role) {
+    console.log('❌ Не все поля заполнены');
     return res.status(400).json({ error: 'Все поля обязательны' });
   }
 
   const validRoles = ['admin', 'moderator', 'editor', 'viewer'];
   if (!validRoles.includes(role)) {
+    console.log('❌ Недопустимая роль:', role);
     return res.status(400).json({ error: 'Недопустимая роль' });
   }
 
   try {
+    console.log('🔍 Проверяем существование пользователя...');
     // Проверяем, существует ли пользователь
     const existingUser = await pool.query(
       'SELECT id FROM users WHERE login = $1 OR email = $2',
       [login, email]
     );
+    console.log('✅ Проверка существования завершена, найдено записей:', existingUser.rows.length);
 
     if (existingUser.rows.length > 0) {
+      console.log('❌ Пользователь уже существует');
       return res.status(400).json({ error: 'Пользователь с таким логином или email уже существует' });
     }
 
+    console.log('🔐 Хэшируем пароль...');
     // Хэшируем пароль
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
+    console.log('✅ Пароль захэширован');
 
-    // Создаем пользователя
-    const result = await pool.query(
+    console.log('💾 Создаем пользователя в БД...');
+    // Создаем пользователя с автоинкрементным ID
+    result = await pool.query(
       'INSERT INTO users (login, email, password_hash, role, created_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING id, login, email, role, created_at',
       [login, email, hashedPassword, role]
     );
+    console.log('✅ Пользователь создан успешно:', result.rows[0]);
 
     res.status(201).json({
       message: 'Пользователь создан успешно',
       user: result.rows[0]
     });
   } catch (err) {
-    console.error('Ошибка создания пользователя:', err);
-    res.status(500).json({ error: 'Ошибка сервера' });
+    console.error('❌ ДЕТАЛЬНАЯ ОШИБКА создания пользователя:');
+    console.error('Сообщение:', err.message);
+    console.error('Код ошибки:', err.code);
+    console.error('Детали:', err.detail);
+    console.error('Полный стек:', err.stack);
+    res.status(500).json({ error: 'Ошибка сервера: ' + err.message });
   }
 });
 

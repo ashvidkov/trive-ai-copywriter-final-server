@@ -60,10 +60,17 @@ const EditorPageMod = () => {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [themes, setThemes] = useState([]);
   const [themeIds, setThemeIds] = useState([]);
+  const [selectedThemeId, setSelectedThemeId] = useState(null); // Для AI уникализации
   const [toast, setToast] = useState(null);
   const [isDirty, setIsDirty] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [uniqueLoading, setUniqueLoading] = useState(false);
+
+  // Состояния для SEO-проверки text.ru
+  const [seoQualityData, setSeoQualityData] = useState(null);
+  const [isCheckingSeo, setIsCheckingSeo] = useState(false);
+  const [seoCheckError, setSeoCheckError] = useState(null);
+  const [showSeoBlock, setShowSeoBlock] = useState(false);
 
   // Загрузка всех тематик
   useEffect(() => {
@@ -114,42 +121,62 @@ const EditorPageMod = () => {
   };
   useEffect(loadArticle, [id]);
 
+  // Восстановление текста из localStorage при загрузке страницы
+  useEffect(() => {
+    const savedText = localStorage.getItem(`editorPageMod_generatedText_${id}`);
+    if (savedText) {
+      setGeneratedText(savedText);
+      setToast({ message: 'Текст восстановлен из локального сохранения', type: 'info' });
+    }
+  }, [id]);
+
+  // Автоматическое сохранение в localStorage при изменении текста
+  useEffect(() => {
+    if (generatedText) {
+      localStorage.setItem(`editorPageMod_generatedText_${id}`, generatedText);
+    }
+  }, [generatedText, id]);
+
   // Обработчики изменений
   const handleSeoChange = (fields) => { setSeo(fields); setIsDirty(true); };
   const handleChangeOriginal = (e) => { setOriginalText(e.target.value); setIsDirty(true); };
   const handleChangeGenerated = (e) => { setGeneratedText(e.target.value); setIsDirty(true); };
-  const handleThemeIds = (ids) => { setThemeIds(ids); setIsDirty(true); };
 
   const handleSave = async (newStatus) => {
+    if (!generatedText?.trim()) {
+      setToast({ message: 'Нет текста для сохранения', type: 'error' });
+      return;
+    }
+
     setSaving(true);
     setError("");
     try {
-      const res = await fetch(`/api/texts/${id}`, {
-        method: "PUT",
+      const response = await fetch(`/api/texts/${id}`, {
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          title: seo.title,
-          h1: seo.h1,
-          meta_description: seo.meta,
-          keywords: seo.keywords,
-          content: originalText,
-          result: generatedText,
-          status: newStatus || status,
-          themeIds
-        })
+          content: generatedText,
+          status: newStatus
+        }),
       });
-      if (!res.ok) throw new Error("Ошибка сохранения");
-      setToast({ message: "Сохранено", type: "save" });
-      setTimeout(() => setToast(null), 5000);
+
+      if (!response.ok) {
+        throw new Error('Ошибка при сохранении');
+      }
+
+      // Очищаем локальное сохранение после успешного сохранения в базу
+      localStorage.removeItem(`editorPageMod_generatedText_${id}`);
       setIsDirty(false);
+      
+      setToast({ message: 'Текст успешно сохранен!', type: 'success' });
+      
+      // Перезагружаем данные статьи
       loadArticle();
-    } catch (e) {
-      setError(e.message);
-      setToast({ message: e.message, type: "error" });
-      setTimeout(() => setToast(null), 5000);
+    } catch (error) {
+      console.error('Ошибка сохранения:', error);
+      setToast({ message: 'Ошибка при сохранении текста', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -176,30 +203,78 @@ const EditorPageMod = () => {
     }
   };
   const handleUnique = async () => {
+    if (!generatedText?.trim()) {
+      setToast({ message: 'Нет текста для уникализации', type: 'error' });
+      return;
+    }
+
     setUniqueLoading(true);
-    setToast(null);
     try {
-      const res = await fetch("/ai/generate/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ raw_text: originalText })
+      const response = await fetch('https://tkmetizi.ru/ai-api/rewrite/unique', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: generatedText,
+          tone: 'professional'
+        }),
       });
-      if (!res.ok) throw new Error("Ошибка AI-генерации: " + (await res.text()));
-      const data = await res.json();
-      setGeneratedText(data.result || "");
-      setSeo({
-        title: data.title || "",
-        h1: data.h1 || "",
-        meta: data.meta_description || "",
-        keywords: data.keywords || ""
-      });
-      setToast({ message: "Текст успешно уникализирован!", type: "approve" });
+
+      if (!response.ok) {
+        throw new Error('Ошибка при уникализации');
+      }
+
+      const data = await response.json();
+      setGeneratedText(data.unique_text);
       setIsDirty(true);
-    } catch (e) {
-      setToast({ message: e.message || "Ошибка AI-генерации", type: "error" });
+      setToast({ message: 'Текст успешно уникализирован!', type: 'success' });
+    } catch (error) {
+      console.error('Ошибка уникализации:', error);
+      setToast({ message: 'Ошибка при уникализации текста', type: 'error' });
     } finally {
       setUniqueLoading(false);
-      setTimeout(() => setToast(null), 5000);
+    }
+  };
+
+  // Функция для проверки SEO-качества через text.ru API
+  const handleCheckSeoQuality = async () => {
+    if (!generatedText?.trim()) {
+      setToast({ message: "Нет текста для проверки SEO", type: "error" });
+      setTimeout(() => setToast(null), 4000);
+      return;
+    }
+
+    setIsCheckingSeo(true);
+    setSeoCheckError(null);
+    setShowSeoBlock(true);
+
+    try {
+      const response = await fetch('https://tkmetizi.ru/ai-api/seo/seo/check-seo-quality', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: generatedText,
+          max_wait_time: 120
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSeoQualityData(data);
+        setToast({ message: "✅ SEO-проверка завершена", type: "success" });
+      } else {
+        setSeoCheckError(data.error_desc || "Ошибка при проверке SEO");
+        setToast({ message: `❌ ${data.error_desc || "Ошибка при проверке SEO"}`, type: "error" });
+      }
+    } catch (error) {
+      setSeoCheckError("Ошибка соединения с сервером");
+      setToast({ message: "❌ Ошибка соединения с сервером", type: "error" });
+    } finally {
+      setIsCheckingSeo(false);
     }
   };
 
@@ -323,7 +398,6 @@ const EditorPageMod = () => {
     <>
       <Header username={username} role={role} />
       <div className="flex min-h-screen bg-gray-50">
-        {toast && <Toast {...toast} onClose={() => setToast(null)} />}
         <SidebarEditor
           articles={filteredArticles}
           statusFilter={statusFilter}
@@ -359,8 +433,8 @@ const EditorPageMod = () => {
                 onUnique={handleUnique}
                 uniqueLoading={uniqueLoading}
                 themes={themes}
-                themeIds={themeIds}
-                setThemeIds={handleThemeIds}
+                selectedThemeId={selectedThemeId}
+                setSelectedThemeId={setSelectedThemeId}
               />
             </div>
             {/* SEO */}
@@ -368,9 +442,159 @@ const EditorPageMod = () => {
               <div className="text-xl font-bold text-gray-800 mb-4">SEO</div>
               <SeoFields seo={seo} onChange={handleSeoChange} />
             </div>
+            
+            {/* Тематики для сохранения в базе данных */}
+            <div className="mb-10">
+              <div className="text-xl font-bold text-gray-800 mb-4">Тематики для сохранения записи в базе данных</div>
+              {themes.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-1">
+                  {themes.map(theme => (
+                    <button
+                      key={theme.id}
+                      type="button"
+                      onClick={() => {
+                        if (themeIds.includes(theme.id)) {
+                          setThemeIds(themeIds.filter(id => id !== theme.id));
+                        } else {
+                          setThemeIds([...themeIds, theme.id]);
+                        }
+                        setIsDirty(true);
+                      }}
+                      className={`
+                        relative px-3 py-2 text-xs font-medium rounded-lg border transition-all duration-200 text-left cursor-pointer
+                        ${themeIds.includes(theme.id)
+                          ? 'bg-green-500 text-white border-green-500 shadow-md transform scale-105' 
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-green-400 hover:bg-green-50'
+                        }
+                      `}
+                    >
+                      <div className="truncate leading-tight">{theme.name}</div>
+                      {themeIds.includes(theme.id) && (
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {themeIds.length > 0 && (
+                <div className="mt-3 text-xs text-green-600 font-medium bg-green-50 p-2 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                    <span>Выбрано тематик для сохранения: <strong>{themeIds.length}</strong></span>
+                  </div>
+                  <div className="mt-1 text-gray-600">
+                    {themes.filter(t => themeIds.includes(t.id)).map(t => t.name).join(', ')}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Блок SEO-проверки */}
+            {showSeoBlock && (
+              <div className="mb-10 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="text-lg font-semibold text-blue-800 mb-4">📊 Результаты SEO-проверки</h4>
+                
+                {isCheckingSeo && (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <span className="ml-3 text-blue-600 font-medium">Проверяем SEO-параметры...</span>
+                  </div>
+                )}
+
+                {seoCheckError && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-center">
+                      <span className="text-red-600 text-lg mr-2">❌</span>
+                      <span className="text-red-700 font-medium">{seoCheckError}</span>
+                    </div>
+                  </div>
+                )}
+
+                {seoQualityData && !isCheckingSeo && !seoCheckError && (
+                  <div className="space-y-4">
+                    {/* Метрики в карточках */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="bg-white p-3 rounded-lg border border-gray-200 text-center">
+                        <div className="text-2xl font-bold text-green-600 mb-1">
+                          {seoQualityData.metrics?.uniqueness || 0}%
+                        </div>
+                        <div className="text-xs text-gray-600">Уникальность</div>
+                        <div className="text-xs mt-1">
+                          {seoQualityData.metrics?.uniqueness >= 80 ? '🟢' : 
+                           seoQualityData.metrics?.uniqueness >= 60 ? '🟡' : '🔴'}
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white p-3 rounded-lg border border-gray-200 text-center">
+                        <div className="text-2xl font-bold text-blue-600 mb-1">
+                          {seoQualityData.metrics?.water_percent || 0}%
+                        </div>
+                        <div className="text-xs text-gray-600">Водность</div>
+                        <div className="text-xs mt-1">
+                          {seoQualityData.metrics?.water_percent <= 15 ? '🟢' : 
+                           seoQualityData.metrics?.water_percent <= 30 ? '🟡' : '🔴'}
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white p-3 rounded-lg border border-gray-200 text-center">
+                        <div className="text-2xl font-bold text-purple-600 mb-1">
+                          {seoQualityData.metrics?.spam_percent || 0}%
+                        </div>
+                        <div className="text-xs text-gray-600">Спам</div>
+                        <div className="text-xs mt-1">
+                          {seoQualityData.metrics?.spam_percent <= 5 ? '🟢' : 
+                           seoQualityData.metrics?.spam_percent <= 15 ? '🟡' : '🔴'}
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white p-3 rounded-lg border border-gray-200 text-center">
+                        <div className="text-2xl font-bold text-orange-600 mb-1">
+                          {seoQualityData.metrics?.spell_errors?.length || 0}
+                        </div>
+                        <div className="text-xs text-gray-600">Ошибки</div>
+                        <div className="text-xs mt-1">
+                          {(seoQualityData.metrics?.spell_errors?.length || 0) === 0 ? '🟢' : '🔴'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Ключевые слова */}
+                    {seoQualityData.keywords && seoQualityData.keywords.length > 0 && (
+                      <div className="bg-white p-4 rounded-lg border border-gray-200">
+                        <h5 className="font-semibold text-gray-800 mb-2">📝 Ключевые слова:</h5>
+                        <div className="flex flex-wrap gap-2">
+                          {seoQualityData.keywords.slice(0, 7).map((keywordObj, index) => (
+                            <span 
+                              key={index}
+                              className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                            >
+                              {keywordObj.keyword} ({keywordObj.count})
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            
             {/* Действия */}
             <div className="mb-10">
               <div className="text-xl font-bold text-gray-800 mb-4">Действия</div>
+              
+              {/* Кнопка SEO-проверки отдельно */}
+              <div className="mb-4">
+                <button
+                  onClick={handleCheckSeoQuality}
+                  disabled={isCheckingSeo || !generatedText?.trim()}
+                  className="px-6 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md"
+                >
+                  {isCheckingSeo ? '⏳ Проверяем...' : '🔍 Проверить SEO-параметры текста'}
+                </button>
+              </div>
+              
+              {/* Основные кнопки действий */}
               <div className="flex gap-6">
                 <button
                   className="px-8 py-3 rounded-xl bg-green-500 text-white font-bold text-lg hover:bg-green-600 transition-all duration-200 shadow-md"
@@ -406,6 +630,15 @@ const EditorPageMod = () => {
           </div>
         </main>
       </div>
+      
+      {/* Toast уведомления */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </>
   );
 };

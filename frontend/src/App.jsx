@@ -7,6 +7,7 @@ import CreatePage from "./pages/CreatePage";
 import EditorPageMod from "./pages/EditorPageMod";
 import EditorPageReader from './pages/EditorPageReader';
 import AdminPage from './pages/AdminPage';
+import SeoSearchPage from './pages/SeoSearchPage';
 
 function RequireAuth({ children }) {
   const token = localStorage.getItem("token");
@@ -48,6 +49,7 @@ const App = () => (
       <Route path="/editor-mod/:id" element={<RequireAuth><EditorPageMod /></RequireAuth>} />
       <Route path="/editor-read/:id" element={<RequireAuth><EditorPageReader /></RequireAuth>} />
       <Route path="/admin" element={<RequireAuth><AdminPage /></RequireAuth>} />
+      <Route path="/seo-copywriter" element={<RequireAuth><SeoSearchPage /></RequireAuth>} />
     </Routes>
   </Router>
 );

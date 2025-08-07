@@ -1,4 +1,5 @@
 import React from "react";
+import logo from "../assets/logo250x.png";
 
 const user = { login: "admin1", role: "Администратор" };
 
@@ -7,9 +8,13 @@ const DashboardLayout = ({ children }) => (
     {/* Header */}
     <header className="flex items-center justify-between px-8 h-20 bg-blue-50 border-b border-blue-100 shadow-sm select-none">
       {/* Логотип слева */}
-      <div className="flex items-center gap-3 flex-shrink-0">
-        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-2xl shadow-lg">Т</div>
-        <span className="text-2xl font-extrabold tracking-tight text-primary">ТРАЙВ</span>
+      <div className="flex items-center flex-shrink-0">
+        <img 
+          src={logo} 
+          alt="TRIVE AI" 
+          className="h-12 w-auto object-contain"
+          style={{ maxWidth: '180px' }}
+        />
       </div>
       {/* Центрированная надпись */}
       <div className="flex-1 text-center">

@@ -57,7 +57,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Создать новый текст
-router.post('/', authenticateJWT, authorizeRoles('admin', 'moderator', 'editor'), async (req, res) => {
+router.post('/', async (req, res) => {
   const client = await pool.connect();
   try {
     let { title, content, result, h1, meta_description, keywords, status, themeIds } = req.body;
@@ -77,7 +77,7 @@ router.post('/', authenticateJWT, authorizeRoles('admin', 'moderator', 'editor')
     // Добавляем запись в историю
     await client.query(
       'INSERT INTO text_history (text_id, action, "user", time) VALUES ($1, $2, $3, NOW())',
-      [newText.id, 'Новая статья создана в базе', req.user.login]
+      [newText.id, 'Новая статья создана в базе', 'system']
     );
     await client.query('COMMIT');
     res.status(201).json(newText);

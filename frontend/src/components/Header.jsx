@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
+import logo from "../assets/logo250x.png";
 
 const rolesMap = {
   admin: "Администратор",
@@ -22,11 +23,15 @@ const Header = ({ username = "alexey", role = "admin" }) => {
   };
   return (
     <header className="w-full h-[60px] min-h-[60px] max-h-[62px] bg-white flex items-center justify-between px-8 shadow-sm border-b border-gray-100 z-20">
-      {/* Логотип и название */}
-      <div className="flex items-center gap-4 select-none">
-        <Link to="/" className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-white font-extrabold text-3xl shadow-md">Т</div>
-          <span className="text-2xl font-extrabold text-primary tracking-wide leading-none" style={{letterSpacing: '0.04em'}}>ТРАЙВ</span>
+      {/* Логотип */}
+      <div className="flex items-center select-none">
+        <Link to="/" className="flex items-center">
+          <img 
+            src={logo} 
+            alt="TRIVE AI" 
+            className="h-10 w-auto object-contain"
+            style={{ maxWidth: '150px' }}
+          />
         </Link>
       </div>
       {/* Центр */}

@@ -1,0 +1,1 @@
+# SEO Copywriter модуль для TRIVE AI

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import UserManagement from "../components/UserManagement";
 import SystemSettings from "../components/SystemSettings";
+import GptSettings from "../components/GptSettings";
 import { Navigate } from "react-router-dom";
 
 const AdminPage = () => {
@@ -39,6 +40,7 @@ const AdminPage = () => {
 
   const tabs = [
     { id: "users", label: "Управление пользователями", icon: "👥" },
+    { id: "gpt", label: "Настройка GPT", icon: "🤖" },
     { id: "settings", label: "Настройки системы", icon: "⚙️" },
     { id: "analytics", label: "Аналитика", icon: "📊" },
     { id: "logs", label: "Логи системы", icon: "📝" }
@@ -80,6 +82,7 @@ const AdminPage = () => {
           {/* Контент табов */}
           <div className="bg-white rounded-xl shadow-lg p-8">
             {activeTab === "users" && <UserManagement />}
+            {activeTab === "gpt" && <GptSettings />}
             {activeTab === "settings" && <SystemSettings />}
             {activeTab === "analytics" && (
               <div className="text-center py-12">
